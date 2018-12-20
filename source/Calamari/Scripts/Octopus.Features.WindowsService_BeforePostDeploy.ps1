@@ -178,7 +178,14 @@ if ($description)
 }
 
 ## $wmiServiceName = $serviceName -replace "'", "\'"
-$status = Get-Service -Name $serviceName | select -expand StartType
+$service = Get-Service -Name $serviceName
+if (($service | get-member | where-object { $_.Name -eq 'StartType' }) -ne $null) {
+    $status = $service | select -expand StartType
+}
+else {
+    $wmiServiceName = $serviceName -replace "'", "\'"
+    $status = Get-WMIObject win32_service -filter ("name='" + $wmiServiceName + "'") -computer "." | select -expand startMode 
+}
 
 if ($startMode -eq "unchanged")
 {
